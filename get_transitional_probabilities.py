@@ -27,7 +27,9 @@ def read_data():
 def add_shift_and_filter(df):
     """
     Shifs location by -1, and filtes last step for each customer out.
-    Assumption: checkout is the final entry per customer. This is not true for some cases.
+    Assumption: checkout is the final entry per customer.
+    Change end state of checkout always to checkout.
+
     Args:
         df: pd.DataFrame - containing all customer information data
     Returns:
@@ -36,9 +38,11 @@ def add_shift_and_filter(df):
     """
     df['location_shifted'] = df['location'].shift(periods=-1)
 
-    df_filtered = df[df['location'] != 'checkout']
+    df.loc[df['location'] == 'checkout', 'location_shifted'] = 'checkout'
 
-    return df_filtered
+    # df_filtered = df[df['location'] != 'checkout']
+
+    return df
 
 
 def transition_dict_to_list(trans_dict):
@@ -74,14 +78,12 @@ def sum_transitions(df):
         transition_start = curr_transition['location']
         transition_stop = curr_transition['location_shifted']
 
-        if not transition_start == transition_stop:
+        transition = (transition_start, transition_stop)
 
-            transition = (transition_start, transition_stop)
-
-            if transition in transition_dict:
-                transition_dict[transition] += 1
-            else:
-                transition_dict[transition] = 1
+        if transition in transition_dict:
+            transition_dict[transition] += 1
+        else:
+            transition_dict[transition] = 1
 
     trans_list = transition_dict_to_list(transition_dict)
 
@@ -106,10 +108,8 @@ def normalize_tp(df):
     # fills "cross values" with 0
     df = df.fillna(0)
 
-    trans_count = df.sum().sum()
-
-    # normalize by n - 1
-    df = df / (trans_count - 1)
+    # normalize by n
+    df = df.div(df.sum(axis=1), axis=0)
 
     return df
 
@@ -123,6 +123,8 @@ def calculate_tp():
 
     df_data = read_data()
     df_data = add_shift_and_filter(df_data)
+
     trans_prob_unnormalized = sum_transitions(df_data)
     trans_prob = normalize_tp(trans_prob_unnormalized)
-    print(trans_prob)
+
+    return trans_prob

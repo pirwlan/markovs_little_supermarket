@@ -1,15 +1,42 @@
+import os
+
+from Customer import Customer
 from dotenv import load_dotenv
 
-import logging
+import cv2
 import get_transitional_probabilities as tp
-import utils
+import logging
+import os
+import time
 
 
 def shopping_simulator():
+    img = cv2.imread(os.getenv('SUPERMARKET_IMG_PATH'))
 
     tp.calculate_tp()
+    c_01 = Customer(1)
+    c_02 = Customer(2)
+    c_03 = Customer(3)
+    c_04 = Customer(4)
+    c_05 = Customer(5)
+    c_06 = Customer(6)
 
-    utils.read_transition_probabilities()
+    customers = [c_01]
+
+    while True:
+
+        frame = img.copy()
+
+        for customer in customers:
+            customer.draw(frame)
+            customer.transition()
+
+        cv2.imshow('frame', frame)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':

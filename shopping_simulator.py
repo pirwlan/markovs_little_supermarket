@@ -6,6 +6,7 @@ import cv2
 import get_transitional_probabilities as tp
 import logging
 import os
+import utils
 
 
 def shopping_simulator():
@@ -14,22 +15,34 @@ def shopping_simulator():
     tp.calculate_tp()
     c_01 = Customer(1)
     c_02 = Customer(2)
+    c_03 = Customer(3)
+    c_04 = Customer(4)
+    c_05 = Customer(5)
+    c_06 = Customer(6)
+    c_07 = Customer(7)
+    c_08 = Customer(8)
+    c_09 = Customer(9)
+    c_10 = Customer(10)
 
-    customers = [c_01, c_02]
+    customers = [c_01, c_02, c_03,
+                 c_04, c_05, c_06,
+                 c_07, c_08, c_09, c_10]
+
     supermarche = Supermarket(customers)
-    while True:
+    while supermarche.step < 25:
 
         frame = img.copy()
 
         supermarche.update(frame)
-        print(supermarche)
 
-        cv2.imshow('frame', frame)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        #cv2.imshow('frame', frame)
+
+        #if cv2.waitKey(1) & 0xFF == ord('q'):
+        #    break
 
     cv2.destroyAllWindows()
+    utils.make_dist_plot(supermarche.cust_dist)
 
 
 if __name__ == '__main__':

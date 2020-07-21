@@ -1,3 +1,4 @@
+import logging
 import os
 import pandas as pd
 
@@ -24,7 +25,7 @@ def read_data():
     return df.sort_values(['customer_no', 'timestamp'])
 
 
-def add_shift_and_filter(df):
+def add_shift_and_checkout(df):
     """
     Shifs location by -1, and filtes last step for each customer out.
     Assumption: checkout is the final entry per customer.
@@ -39,8 +40,6 @@ def add_shift_and_filter(df):
     df['location_shifted'] = df['location'].shift(periods=-1)
 
     df.loc[df['location'] == 'checkout', 'location_shifted'] = 'checkout'
-
-    # df_filtered = df[df['location'] != 'checkout']
 
     return df
 
@@ -88,15 +87,15 @@ def sum_transitions(df):
     trans_list = transition_dict_to_list(transition_dict)
 
     # read trans list to DataFrame
-    df_test = pd.DataFrame(trans_list, columns=['trans_start', 'trans_stop', 'trans_count'])
+    df_trans_long = pd.DataFrame(trans_list, columns=['trans_start', 'trans_stop', 'trans_count'])
 
     # transform to wide foramat
-    df_piv = df_test.pivot(index='trans_start', columns='trans_stop', values='trans_count')
+    df_wide = df_trans_long.pivot(index='trans_start', columns='trans_stop', values='trans_count')
 
-    return df_piv
+    return df_wide
 
 
-def normalize_tp(df):
+def normalize_and_save_tp(df):
     """
     normalized transition matrix by total event count - 1
     Args:
@@ -109,22 +108,116 @@ def normalize_tp(df):
     df = df.fillna(0)
 
     # normalize by n
-    df = df.div(df.sum(axis=1), axis=0)
+    total_trans_per_row = df.sum(axis=1)
 
-    return df
+    df = df.div(total_trans_per_row, axis=0)
+
+    df.to_csv(os.getenv('TRANS_PROB_PATH'))
+
+
+def add_missing_time_stamps(df):
+    """
+    adds missing time stamps to grasp time spend per state better
+
+    Args:
+        df: pd.DataFrame - input data mit missing time values
+
+    Returns:
+        df: pd.DataFrame - with missing values
+
+    """
+
+    for idx, customer in enumerate(df['customer_no'].unique()):
+        df_curr_cust = df[df['customer_no'] == customer]
+
+        start_time = df_curr_cust.index[0]
+        stop_time = df_curr_cust.index[-1]
+
+        # create index
+        date_idx = pd.date_range(start_time,
+                                 stop_time,
+                                 freq='min')
+
+        # forward fill missing values
+        df_curr_cust_filled = pd.DataFrame(df_curr_cust, index=date_idx).ffill()
+
+        # build new DatrFrame
+        df_full = df_curr_cust_filled if idx == 0 else pd.concat([df_full, df_curr_cust_filled])
+
+    return df_full
+
+
+def get_customer_index(df):
+    """
+    Creates index on the customer level.
+    Args:
+        df: pd.DataFrame
+
+    Returns:
+        df: pd.DataFrae
+    """
+    df_sorted = df.sort_values(['customer_no', 'timestamp'])
+
+    customer_numbers = df_sorted['customer_no']
+
+    counts = dict()
+    cust_count = list()
+
+    for customer in customer_numbers:
+
+        if customer in counts:
+            counts[customer] += 1
+
+        else:
+            counts[customer] = 1
+
+        cust_count.append(counts[customer])
+
+    df_sorted['customer_index'] = cust_count
+
+    return df_sorted
+
+
+def get_initial_probability(df):
+    """
+    Checks location of first occurence of each customer
+    for initial probabilies
+    Args:
+        df: pd.DataFrame
+
+    """
+    df_ = df.copy()
+    df_['timestamp'] = df_.index
+    df_ = get_customer_index(df_)
+    df_initial_prob = df_[df_['customer_index'] == 1]['location'].value_counts(normalize=True)
+    df_initial_prob.to_csv(os.getenv('INIT_PROB_PATH'))
 
 
 def calculate_tp():
     """
     Main landing of get_transtional_probabilities.py
-    Returns:
-        transitional_probabilites_matrix: pd.DataFrame - normalized matrix
     """
+    logger = logging.getLogger(__file__.split('/')[-1][:-3])
+
+    if os.path.exists(os.getenv('INIT_PROB_PATH')) and os.path.exists(os.getenv('TRANS_PROB_PATH')):
+        logger.info(f'Initial location probabilities and transition probabilities have already been calculated...')
+        return True
 
     df_data = read_data()
-    df_data = add_shift_and_filter(df_data)
+    df_data = add_missing_time_stamps(df_data)
+    df_data = add_shift_and_checkout(df_data)
 
-    trans_prob_unnormalized = sum_transitions(df_data)
-    trans_prob = normalize_tp(trans_prob_unnormalized)
+    if not os.path.exists(os.getenv('INIT_PROB_PATH')):
+        get_initial_probability(df_data)
+        logger.info(f'Initial location probabilities has been calculated and saved...')
 
-    return trans_prob
+    if not os.path.exists(os.getenv('TRANS_PROB_PATH')):
+
+        trans_prob_unnormalized = sum_transitions(df_data)
+        normalize_and_save_tp(trans_prob_unnormalized)
+        logger.info(f'Transition probabilities has been calculated and saved...')
+
+
+
+
+

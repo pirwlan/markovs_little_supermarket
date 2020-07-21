@@ -1,14 +1,15 @@
 from dotenv import load_dotenv
 
 import logging
-import os
 import get_transitional_probabilities as tp
+import utils
 
 
 def shopping_simulator():
 
-    trans_prob_matrix = tp.calculate_tp()
-    print(trans_prob_matrix)
+    tp.calculate_tp()
+
+    utils.read_transition_probabilities()
 
 
 if __name__ == '__main__':
@@ -26,5 +27,5 @@ if __name__ == '__main__':
     logger.info(f'Programm has started...')
 
     shopping_simulator()
-    
-    logger.info(f'Programm has finished-..')
+
+    logger.info(f'Programm has finished...')

@@ -20,6 +20,8 @@ class Supermarket:
 
         self.cust_size = 20
 
+        self.checkout_list = list()
+
         self.location_dict = {
             'checkout': (120, 660),
             'dairy': (180, 350),
@@ -46,8 +48,9 @@ class Supermarket:
 
         self.step += 1
         self.update_cust_locations()
-        self.draw(frame)
+        #self.draw(frame)
         self.update_cust_distribution()
+        self.update_checkout()
 
     def draw(self, frame):
 
@@ -62,6 +65,7 @@ class Supermarket:
         for cust in self.cust_list:
             cust.update_location(self.location_dict[cust.current_location])
             cust.transition()
+        self.checkout_list_update()
 
     def update_cust_distribution(self):
 
@@ -78,3 +82,19 @@ class Supermarket:
 
         for location, curr_count in curr_dist_dict.items():
             self.cust_dist[location].append(curr_count)
+
+    def update_checkout(self):
+        if len(self.checkout_list) > 0:
+
+            curr_cust = self.checkout_list.pop(0)
+
+            for idx, cust in enumerate(self.cust_list):
+                if curr_cust.customer_id == cust.customer_id:
+                    self.cust_list.pop(idx)
+
+    def checkout_list_update(self):
+        for cust in self.cust_list:
+            if len(cust.location_history) > 1:
+                if cust.location_history[-1] == 'checkout' and cust.location_history[-2] != 'checkout':
+                    self.checkout_list.append(cust)
+

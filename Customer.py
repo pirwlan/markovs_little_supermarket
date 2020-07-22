@@ -38,8 +38,7 @@ class Customer:
 
     def __repr__(self):
 
-        return f'''Customer {self.customer_id} is in section {self.current_location} 
-                    and has visited {self.location_history} before.'''
+        return f'{self.customer_id}'
 
     def transition(self):
         """

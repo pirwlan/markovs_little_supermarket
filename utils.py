@@ -45,12 +45,13 @@ def make_dist_plot(dist_dict):
 
     @gif.frame
     def plot_dist(idx):
-
+        cust_init = df_dist.iloc[0].sum()
+        cust_curr = df_dist.iloc[idx].sum()
         sns.barplot(x=df_dist.columns, y=df_dist.iloc[idx])
-        plt.title(f'Timestep {idx}')
+        plt.title(f'Initial Cust: {cust_init}, Current Cust: {cust_curr}, Timestep {idx}')
         plt.xlabel('location')
         plt.ylabel('')
-        plt.ylim(0, cust_number)
+        plt.ylim(0, cust_init)
 
     frames = []
     for timestep in range(len(df_dist)):

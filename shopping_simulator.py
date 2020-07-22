@@ -16,10 +16,10 @@ def shopping_simulator():
 
     supermarche = Supermarket()
 
-    for i in range(50):
+    for i in range(20):
         supermarche.add_customer(customer=Customer(customer_id=i))
 
-    while supermarche.step < 20:
+    while supermarche.step < 25:
 
         frame = img.copy()
 

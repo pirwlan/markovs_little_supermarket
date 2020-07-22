@@ -13,35 +13,24 @@ def shopping_simulator():
     img = cv2.imread(os.getenv('SUPERMARKET_IMG_PATH'))
 
     tp.calculate_tp()
-    c_01 = Customer(1)
-    c_02 = Customer(2)
-    c_03 = Customer(3)
-    c_04 = Customer(4)
-    c_05 = Customer(5)
-    c_06 = Customer(6)
-    c_07 = Customer(7)
-    c_08 = Customer(8)
-    c_09 = Customer(9)
-    c_10 = Customer(10)
 
-    customers = [c_01, c_02, c_03,
-                 c_04, c_05, c_06,
-                 c_07, c_08, c_09, c_10]
+    supermarche = Supermarket()
 
-    supermarche = Supermarket(customers)
-    while supermarche.step < 25:
+    for i in range(50):
+        supermarche.add_customer(customer=Customer(customer_id=i))
+
+    while supermarche.step < 20:
 
         frame = img.copy()
 
         supermarche.update(frame)
-
 
         #cv2.imshow('frame', frame)
 
         #if cv2.waitKey(1) & 0xFF == ord('q'):
         #    break
 
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
     utils.make_dist_plot(supermarche.cust_dist)
 
 
@@ -60,5 +49,5 @@ if __name__ == '__main__':
     logger.info(f'Programm has started...')
 
     shopping_simulator()
-
+    #utils.get_supermarket_mask()
     logger.info(f'Programm has finished...')

@@ -1,6 +1,8 @@
+import cv2
 import gif
 import logging
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import pandas as pd
 import seaborn as sns
@@ -58,4 +60,22 @@ def make_dist_plot(dist_dict):
     gif.save(frames, 'distribution.gif', duration=500)
 
 
+def get_supermarket_mask():
+    """
+    Calculates mask for supermarktet for later movement
+    Returns:
+        supermask: np.array - mask in
+
+    """
+    img_np = cv2.imread(os.getenv('SUPERMARKET_IMG_PATH'))
+    img_mask = cv2.imread(os.getenv('SUPERMARKET_MASK_PATH'))
+
+    while True:
+     #   cv2.imshow('frame', img_np)
+        cv2.imshow('frame', img_mask)
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cv2.destroyAllWindows()
 

@@ -1,11 +1,15 @@
+import cv2
+import os
+
+
 class Supermarket:
     """
     The supermarket class
     """
 
-    def __init__(self, customers):
+    def __init__(self):
 
-        self.cust_list = customers
+        self.cust_list = list()
         self.cust_dist = {
             'checkout': list(),
             'dairy': list(),
@@ -26,6 +30,8 @@ class Supermarket:
 
         self.step = 0
 
+        self.mask = cv2.imread(os.getenv('SUPERMARKET_MASK_PATH'))
+
     def __repr__(self):
         output_str = f'At time step {self.step}, there are {len(self.cust_list)} in the supermarket. \n Of those are: \n'
         for location, count in self.cust_dist.items():
@@ -33,13 +39,15 @@ class Supermarket:
 
         return output_str
 
+    def add_customer(self, customer):
+        self.cust_list.append(customer)
+
     def update(self, frame):
 
         self.step += 1
         self.update_cust_locations()
         self.draw(frame)
         self.update_cust_distribution()
-
 
     def draw(self, frame):
 

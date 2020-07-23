@@ -71,15 +71,6 @@ class Customer:
         self.target_location = np.random.choice(a=TRANS_PROB.columns.values,
                                                 p=curr_trans_prob)
 
-    def walk(self):
-        """
-        Moves customer 1 step closer to the target location
-        """
-        next_step = self.next_steps.pop(0)
-        print(next_step, len(self.next_steps))
-        self.x = next_step[0]
-        self.y = next_step[1]
-
     def update_location(self, updated_x, updated_y):
         """
         allows for update of localitsation to keep track of customer
@@ -90,13 +81,6 @@ class Customer:
         self.x = updated_x
         self.y = updated_y
 
-    def update_next_steps(self, next_steps):
-        """
-        interface for updating the next steps
-        Args:
-            next_steps: list of (y, x) steps
 
-        """
-        self.next_steps = next_steps
 
 

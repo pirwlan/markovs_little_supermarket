@@ -1,7 +1,3 @@
-from pathfinding.core.diagonal_movement import DiagonalMovement
-from pathfinding.core.grid import Grid
-from pathfinding.finder.a_star import AStarFinder
-
 import cv2
 import numpy as np
 import os
@@ -30,13 +26,11 @@ class Supermarket:
             'dairy': [(360, 420), (220, 420)],
             'spices': [(580, 640), (220, 420)],
             'fruit': [(810, 900), (220, 420)],
-            'checkout': [(660, 740), (170, 450)]}
+            'checkout': [(170, 450), (660, 740)]}
 
         self.step = 0
 
         self.mask = cv2.imread(os.getenv('SUPERMARKET_MASK_PATH'))
-        self.img_mask_binary = np.where(self.mask.mean(axis=2) == 0, 0, 1)
-        self.grid = Grid(matrix=self.img_mask_binary)
 
     def __repr__(self):
         output_str = f'At time step {self.step}, there are {len(self.cust_list)} in the supermarket. \n Of those are: \n'
@@ -55,37 +49,28 @@ class Supermarket:
         """
         self.cust_list.append(customer)
 
-        for cust in self.cust_list:
-            updated_x = np.random.randint(*self.location_dict[cust.current_location][0])
-            updated_y = np.random.randint(*self.location_dict[cust.current_location][1])
-            cust.update_location(updated_x=updated_x, updated_y=updated_y)
+        for curr_cust in self.cust_list:
+            self.update_cust_location(curr_cust)
 
     def update_step(self, frame):
 
         self.step += 1
 
         for cust in self.cust_list:
-            # check whether there are steps do step length
-            if len(cust.next_steps) <= 1:
-                cust.transition()
-                self.calc_next_steps(cust)
-
-            elif len(cust.next_steps) > 1:
-                cust.walk()
+            # do transition for customer
+            cust.transition()
+            self.update_cust_location(curr_cust=cust)
 
             # draw customers on image
             self.draw(cust, frame)
 
-             #self.checkout_list_update(curr_cust=cust)
+            self.checkout_list_update(curr_cust=cust)
 
         # see who is new in chekout and pop one
-        #self.update_checkout()
+        self.update_checkout()
 
         # update distribution
-        #self.update_cust_distribution()
-
-
-        ####self.update_cust_locations()
+        self.update_cust_distribution()
 
     def draw(self, curr_cust, frame):
 
@@ -127,21 +112,12 @@ class Supermarket:
             if curr_cust.location_history[-1] == 'checkout' and curr_cust.location_history[-2] != 'checkout':
                 self.checkout_list.append(curr_cust)
 
-    def calc_next_steps(self, curr_cust):
-        self.grid.cleanup()
-        start = self.grid.node(curr_cust.x, curr_cust.y)
+    def update_cust_location(self, curr_cust):
+        if self.step > 0:
+            curr_cust.current_location = curr_cust.target_location
 
-        target_x = np.random.randint(*self.location_dict[curr_cust.target_location][0])
-        target_y = np.random.randint(*self.location_dict[curr_cust.target_location][1])
-        print(f'[CALC NEXT STEPS] Next target coordinates: x: {target_x}, y: {target_y}')
-        end = self.grid.node(target_x, target_y)
+        updated_x = np.random.randint(*self.location_dict[curr_cust.current_location][0])
+        updated_y = np.random.randint(*self.location_dict[curr_cust.current_location][1])
 
-        finder = AStarFinder(diagonal_movement=DiagonalMovement.always)
-        path, runs = finder.find_path(start, end, self.grid)
-
-        curr_cust.update_next_steps(path)
-
-
-
-
+        curr_cust.update_location(updated_x=updated_x, updated_y=updated_y)
 

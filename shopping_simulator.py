@@ -5,7 +5,6 @@ from supermarket import Supermarket
 import cv2
 import get_transitional_probabilities as tp
 import logging
-import numpy as np
 import os
 import utils
 
@@ -17,11 +16,11 @@ def shopping_simulator():
 
     supermarche = Supermarket()
 
-    for cust_id in range(1):
+    for cust_id in range(1000):
         supermarche.add_customer(customer=Customer(customer_id=cust_id))
 
-    while True: #supermarche.step < 5:
-        print(f'[MAIN] Start of step {supermarche.step}')
+    while True:
+        # print(f'[MAIN] Start of step {supermarche.step}')
         frame = img.copy()
 
         supermarche.update_step(frame)
@@ -31,8 +30,8 @@ def shopping_simulator():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    #cv2.destroyAllWindows()
-    #utils.make_dist_plot(supermarche.cust_dist)
+    cv2.destroyAllWindows()
+    utils.make_dist_plot(supermarche.cust_dist)
 
 
 if __name__ == '__main__':

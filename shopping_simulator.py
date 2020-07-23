@@ -12,27 +12,35 @@ import utils
 
 def shopping_simulator():
     supermarket_img = cv2.imread(os.getenv('SUPERMARKET_IMG_PATH'))
-
+    start = False
     tp.calculate_tp()
 
     supermarche = Supermarket()
-    canvas = np.zeros([780, 1637, 3], dtype='uint8')
+    canvas = np.zeros([780, 1752, 3], dtype='uint8')
     for cust_id in range(1000):
         supermarche.add_customer(customer=Customer(customer_id=cust_id))
 
     while supermarche.step < 1000:
-
         frame = canvas.copy()
         frame[0:int(os.getenv('SUPERMARKET_IMG_HEIGHT')), 0:int(os.getenv('SUPERMARKET_IMG_WIDTH'))] = supermarket_img
 
-        supermarche.update_step(frame)
+        if start:
 
-        frame = utils.draw_distribution(frame, supermarche.curr_dist_dict)
+            supermarche.update_step(frame)
+
+            frame = utils.draw_distribution(frame, supermarche.curr_dist_dict)
+            frame = utils.draw_turnover(frame, supermarche.turnover_history)
 
         cv2.imshow('frame', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        elif cv2.waitKey(1) & 0xFF == ord('w'):
+            start = True
+
+        elif cv2.waitKey(1) & 0xFF == ord('s'):
+            start = False
 
     cv2.destroyAllWindows()
     utils.make_dist_gif(supermarche.cust_dist)
@@ -53,4 +61,13 @@ if __name__ == '__main__':
     logger.info(f'Programm has started...')
 
     shopping_simulator()
+
+    curr_dist_dict={
+        'checkout': 0,
+        'dairy': 0,
+        'fruit': 0,
+        'drinks': 0,
+        'spices': 0
+    }
+
     logger.info(f'Programm has finished...')

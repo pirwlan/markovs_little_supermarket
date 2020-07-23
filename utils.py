@@ -71,14 +71,13 @@ def make_dist_gif(dist_dict):
     gif.save(frames, 'distribution.gif', duration=500)
 
 
-def get_img_from_fig(fig, dpi=96):
+def get_img_from_fig(fig):
     """
     Converts fig object to numpy array for incorporation
     into bigger convas
 
     Args:
         fig: plt.figure object
-        dpi: float - determines size of image
 
     Returns:
         img: np.array
@@ -86,7 +85,7 @@ def get_img_from_fig(fig, dpi=96):
     """
 
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=dpi)
+    fig.savefig(buf, format="png")
     buf.seek(0)
     img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
     buf.close()
@@ -111,7 +110,7 @@ def get_current_dist(curr_dist_dict):
     # plot the bargraph
     plt.clf()
 
-    fig = plt.figure(dpi=96)
+    fig = plt.figure(figsize=(7, 4))
     ax = sns.barplot(x=df_dist.index, y=df_dist.values)
 
     ax.set_xlabel("location")
@@ -120,7 +119,7 @@ def get_current_dist(curr_dist_dict):
     ax.legend()
     ax.set_title("current customer distribution")
 
-    curr_fig = get_img_from_fig(fig, dpi=91.5)
+    curr_fig = get_img_from_fig(fig)
 
     return curr_fig
 
@@ -142,7 +141,6 @@ def draw_distribution(frame, curr_dist_dict):
 
     graph_height = curr_dist_fig.shape[0]
     graph_width = curr_dist_fig.shape[1]
-
     y_upper = 0
     y_lower = int(graph_height)
 
@@ -152,3 +150,56 @@ def draw_distribution(frame, curr_dist_dict):
     frame_copy[y_upper:y_lower, x_upper:x_lower] = curr_dist_fig
 
     return frame_copy
+
+
+def draw_turnover(frame, turnover_history):
+    """
+    draw distribution on canvas frame
+
+    Args:
+        frame: np.array - canvas
+        turnover_history: list - history of turnover
+
+    Returns:
+        frame_copy: np.Array - new canvas to show
+
+    """
+    frame_copy = frame.copy()
+    curr_turn_fig = get_current_turnover(turnover_history)
+
+    graph_height = curr_turn_fig.shape[0]
+    graph_width = curr_turn_fig.shape[1]
+
+    y_upper = int(graph_height)
+    y_lower = int(os.getenv('SUPERMARKET_IMG_HEIGHT'))
+
+    x_upper = int(os.getenv('SUPERMARKET_IMG_WIDTH'))
+    x_lower = int(os.getenv('SUPERMARKET_IMG_WIDTH')) + int(graph_width)
+
+    frame_copy[y_upper:y_lower, x_upper:x_lower] = curr_turn_fig
+
+    return frame_copy
+
+
+def get_current_turnover(turnover_history):
+    """
+
+    Returns:
+
+    """
+    x_axis = [x for x in range(len(turnover_history))]
+    # plot the bargraph
+    plt.clf()
+
+    fig = plt.figure(figsize=(7, 3.9))
+    ax = sns.lineplot(x_axis, turnover_history)
+
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Turnover")
+
+    ax.legend()
+    ax.set_title("Turnover")
+
+    curr_fig = get_img_from_fig(fig)
+
+    return curr_fig

@@ -50,6 +50,7 @@ class Supermarket:
             'checkout': 0}
 
         self.turnover = 0
+        self.turnover_history = [0]
 
         self.step = 0
 
@@ -192,3 +193,4 @@ class Supermarket:
         for location, cust_no in self.curr_dist_dict.items():
             self.turnover += self.location_turnover[location] * cust_no
 
+        self.turnover_history.append(self.turnover)

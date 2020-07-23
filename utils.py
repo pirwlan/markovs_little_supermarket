@@ -1,7 +1,9 @@
 import cv2
 import gif
+import io
 import logging
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import pandas as pd
 import seaborn as sns
@@ -12,8 +14,9 @@ logger = logging.getLogger(__file__.split('/')[-1][:-3])
 def read_initial_probabilities():
     """
     reads initial location probabilities
+
     Returns:
-        df_init: pd.DataFrame -
+        df_init: pd.DataFrame
     """
 
     df_init = pd.read_csv(os.getenv('INIT_PROB_PATH'))
@@ -26,21 +29,29 @@ def read_initial_probabilities():
 
 
 def read_transition_probabilities():
+    """
+    reads transition probabilities
+
+    Returns:
+        df_trans: pd.DataFrame
+    """
     df_trans = pd.read_csv(os.getenv('TRANS_PROB_PATH'),
                            index_col=0)
 
     return df_trans
 
 
-def make_dist_plot(dist_dict):
+def make_dist_gif(dist_dict):
     """
-    makes a gif image throught out all time points
+    makes a gif image of the customer distribution
+    throughtout all time points
+
     Args:
-        dist_dict: dict - customer distribution history
+        dist_dict: dict - customer distribution history with location, history_list as k,v
 
     """
+    plt.clf()
     df_dist = pd.DataFrame(dist_dict)
-    cust_number = df_dist.iloc[0].sum()
 
     @gif.frame
     def plot_dist(idx):
@@ -60,4 +71,84 @@ def make_dist_plot(dist_dict):
     gif.save(frames, 'distribution.gif', duration=500)
 
 
+def get_img_from_fig(fig, dpi=96):
+    """
+    Converts fig object to numpy array for incorporation
+    into bigger convas
 
+    Args:
+        fig: plt.figure object
+        dpi: float - determines size of image
+
+    Returns:
+        img: np.array
+
+    """
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi)
+    buf.seek(0)
+    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+    buf.close()
+    img = cv2.imdecode(img_arr, 1)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    return img
+
+
+def get_current_dist(curr_dist_dict):
+    """
+    Creates figure object of current customer distribution
+
+    Args:
+        curr_dist_dict: dict - current distribution of customers
+
+    Returns:
+        dist_img: np.array - figure as array
+    """
+    df_dist = pd.Series(curr_dist_dict)
+
+    # plot the bargraph
+    plt.clf()
+
+    fig = plt.figure(dpi=96)
+    ax = sns.barplot(x=df_dist.index, y=df_dist.values)
+
+    ax.set_xlabel("location")
+    ax.set_ylabel("num of current customer")
+
+    ax.legend()
+    ax.set_title("current customer distribution")
+
+    curr_fig = get_img_from_fig(fig, dpi=91.5)
+
+    return curr_fig
+
+
+def draw_distribution(frame, curr_dist_dict):
+    """
+    draw distribution on canvas frame
+
+    Args:
+        frame: np.array - canvas
+        curr_dist_dict: dict - current distribution
+
+    Returns:
+        frame_copy: np.Array - new canvas to show
+
+    """
+    frame_copy = frame.copy()
+    curr_dist_fig = get_current_dist(curr_dist_dict)
+
+    graph_height = curr_dist_fig.shape[0]
+    graph_width = curr_dist_fig.shape[1]
+
+    y_upper = 0
+    y_lower = int(graph_height)
+
+    x_upper = int(os.getenv('SUPERMARKET_IMG_WIDTH'))
+    x_lower = int(os.getenv('SUPERMARKET_IMG_WIDTH')) + int(graph_width)
+
+    frame_copy[y_upper:y_lower, x_upper:x_lower] = curr_dist_fig
+
+    return frame_copy

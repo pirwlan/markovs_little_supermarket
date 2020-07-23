@@ -1,6 +1,4 @@
-import cv2
 import numpy as np
-import os
 
 
 class Supermarket:
@@ -19,6 +17,7 @@ class Supermarket:
         # people at checkout
         self.checkout_list = list()
 
+        # distribution dicts
         self.cust_dist = {
             'checkout': list(),
             'dairy': list(),
@@ -35,12 +34,22 @@ class Supermarket:
             'spices': 0
         }
 
+        # spawn coordinates of different locations
         self.location_dict = {
             'drinks': [(120, 210), (220, 420)],
             'dairy': [(360, 420), (220, 420)],
             'spices': [(580, 640), (220, 420)],
             'fruit': [(810, 900), (220, 420)],
             'checkout': [(170, 450), (660, 740)]}
+
+        self.location_turnover = {
+            'drinks': 6,
+            'dairy': 5,
+            'spices': 3,
+            'fruit': 4,
+            'checkout': 0}
+
+        self.turnover = 0
 
         self.step = 0
 
@@ -66,6 +75,11 @@ class Supermarket:
             self.update_cust_location(curr_cust)
 
     def update_step(self, frame):
+        """
+        updates supermarket
+        Args:
+            frame: np.Array - canvas
+        """
 
         self.step += 1
 
@@ -85,7 +99,16 @@ class Supermarket:
         # update distribution
         self.update_cust_distribution()
 
+        # calculate turnover
+        self.calc_turnover()
+
     def draw(self, curr_cust, frame):
+        """
+        Draws each customer on the canvas
+        Args:
+            curr_cust: Customer - single customer instance
+            frame: np.array - canvas to draw on
+        """
 
         loc_upper_y = int(curr_cust.y - (curr_cust.size / 2))
         loc_lower_y = int(curr_cust.y + curr_cust.size - (curr_cust.size / 2))
@@ -95,6 +118,18 @@ class Supermarket:
         frame[loc_upper_y: loc_lower_y, loc_upper_x: loc_lower_x] = curr_cust.color
 
     def update_cust_distribution(self):
+        """
+        Counts current customer in each location, and appends count
+        to history per location
+        """
+
+        self.curr_dist_dict = {
+            'checkout': 0,
+            'dairy': 0,
+            'fruit': 0,
+            'drinks': 0,
+            'spices': 0
+        }
 
         for cust in self.cust_list:
             self.curr_dist_dict[cust.current_location] += 1
@@ -102,9 +137,11 @@ class Supermarket:
         for location, curr_count in self.curr_dist_dict.items():
             self.cust_dist[location].append(curr_count)
 
-        return self.curr_dist_dict()
-
     def update_checkout(self):
+        """
+        Deletes one customer who is in location checkout
+        and deletes him from customer list.
+        """
         if len(self.checkout_list) > 0:
 
             curr_cust = self.checkout_list.pop(0)
@@ -114,12 +151,26 @@ class Supermarket:
                     self.cust_list.pop(idx)
 
     def checkout_list_update(self, curr_cust):
+        """
+        adds new customer to checkout_list
+        Args:
+            curr_cust: Customer - customer instance
+        """
 
         if len(curr_cust.location_history) > 1:
             if curr_cust.location_history[-1] == 'checkout' and curr_cust.location_history[-2] != 'checkout':
                 self.checkout_list.append(curr_cust)
 
     def update_cust_location(self, curr_cust):
+        """
+        Update location of customer dependent on new location.
+        If checkout state has not changed for two turns, do not
+        change location
+
+        Args:
+            curr_cust: Customer - Customer instance
+        """
+
         if curr_cust.current_location == 'checkout' \
                             and curr_cust.target_location == 'checkout':
             return True
@@ -131,4 +182,13 @@ class Supermarket:
         updated_y = np.random.randint(*self.location_dict[curr_cust.current_location][1])
 
         curr_cust.update_location(updated_x=updated_x, updated_y=updated_y)
+
+    def calc_turnover(self):
+        """
+        Calculates cumulative sum of turnover each round
+        based on how much people are in each location.
+        """
+
+        for location, cust_no in self.curr_dist_dict.items():
+            self.turnover += self.location_turnover[location] * cust_no
 

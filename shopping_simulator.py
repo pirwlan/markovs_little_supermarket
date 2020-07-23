@@ -17,18 +17,17 @@ def shopping_simulator():
 
     supermarche = Supermarket()
     canvas = np.zeros([780, 1637, 3], dtype='uint8')
-    for cust_id in range(100):
+    for cust_id in range(1000):
         supermarche.add_customer(customer=Customer(customer_id=cust_id))
 
-    while supermarche.step < 100:
-        # print(f'[MAIN] Start of step {supermarche.step}')
+    while supermarche.step < 1000:
+
         frame = canvas.copy()
         frame[0:int(os.getenv('SUPERMARKET_IMG_HEIGHT')), 0:int(os.getenv('SUPERMARKET_IMG_WIDTH'))] = supermarket_img
 
         supermarche.update_step(frame)
-        test = supermarche.update_cust_distribution()
-        print(test)
 
+        frame = utils.draw_distribution(frame, supermarche.curr_dist_dict)
 
         cv2.imshow('frame', frame)
 
@@ -36,7 +35,7 @@ def shopping_simulator():
             break
 
     cv2.destroyAllWindows()
-    utils.make_dist_plot(supermarche.cust_dist)
+    utils.make_dist_gif(supermarche.cust_dist)
 
 
 if __name__ == '__main__':
@@ -54,5 +53,4 @@ if __name__ == '__main__':
     logger.info(f'Programm has started...')
 
     shopping_simulator()
-    #utils.draw_debugging()
     logger.info(f'Programm has finished...')

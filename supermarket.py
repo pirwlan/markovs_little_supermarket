@@ -104,7 +104,7 @@ class Supermarket:
 
             for idx, cust in enumerate(self.cust_list):
                 if curr_cust.customer_id == cust.customer_id:
-                    self.cust_list.pop(idx)
+                  self.cust_list.pop(idx)
 
     def checkout_list_update(self, curr_cust):
 
@@ -113,6 +113,10 @@ class Supermarket:
                 self.checkout_list.append(curr_cust)
 
     def update_cust_location(self, curr_cust):
+        if curr_cust.current_location == 'checkout' \
+                            and curr_cust.target_location == 'checkout':
+            return True
+
         if self.step > 0:
             curr_cust.current_location = curr_cust.target_location
 

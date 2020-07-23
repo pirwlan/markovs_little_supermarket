@@ -60,26 +60,4 @@ def make_dist_plot(dist_dict):
     gif.save(frames, 'distribution.gif', duration=500)
 
 
-def draw_debugging():
-    img = cv2.imread(os.getenv('SUPERMARKET_IMG_PATH'))
-    y = 590
-    x = 344
-
-    size = 20
-    loc_upper_y = int(y - (size / 2))
-    loc_lower_y = int(y + size - (size / 2))
-    loc_upper_x = int(x - (size / 2))
-    loc_lower_x = int(x + size - (size / 2))
-
-    while True:
-
-        frame = img.copy()
-        frame[loc_upper_y: loc_lower_y, loc_upper_x: loc_lower_x] = (0, 0, 255)
-
-        cv2.imshow('frame', frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-
 

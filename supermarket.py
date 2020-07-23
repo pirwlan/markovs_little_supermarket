@@ -10,7 +10,15 @@ class Supermarket:
 
     def __init__(self):
 
+        # cust_list are customers currently in the supermarket
         self.cust_list = list()
+
+        # cust_list_all keeps track of all customer ever in the supermarkg
+        self.cust_list_all = list()
+
+        # people at checkout
+        self.checkout_list = list()
+
         self.cust_dist = {
             'checkout': list(),
             'dairy': list(),
@@ -19,7 +27,13 @@ class Supermarket:
             'spices': list()
         }
 
-        self.checkout_list = list()
+        self.curr_dist_dict = {
+            'checkout': 0,
+            'dairy': 0,
+            'fruit': 0,
+            'drinks': 0,
+            'spices': 0
+        }
 
         self.location_dict = {
             'drinks': [(120, 210), (220, 420)],
@@ -29,8 +43,6 @@ class Supermarket:
             'checkout': [(170, 450), (660, 740)]}
 
         self.step = 0
-
-        self.mask = cv2.imread(os.getenv('SUPERMARKET_MASK_PATH'))
 
     def __repr__(self):
         output_str = f'At time step {self.step}, there are {len(self.cust_list)} in the supermarket. \n Of those are: \n'
@@ -48,6 +60,7 @@ class Supermarket:
 
         """
         self.cust_list.append(customer)
+        self.cust_list_all.append(customer)
 
         for curr_cust in self.cust_list:
             self.update_cust_location(curr_cust)
@@ -83,19 +96,13 @@ class Supermarket:
 
     def update_cust_distribution(self):
 
-        curr_dist_dict = {
-            'checkout': 0,
-            'dairy': 0,
-            'fruit': 0,
-            'drinks': 0,
-            'spices': 0
-        }
-
         for cust in self.cust_list:
-            curr_dist_dict[cust.current_location] += 1
+            self.curr_dist_dict[cust.current_location] += 1
 
-        for location, curr_count in curr_dist_dict.items():
+        for location, curr_count in self.curr_dist_dict.items():
             self.cust_dist[location].append(curr_count)
+
+        return self.curr_dist_dict()
 
     def update_checkout(self):
         if len(self.checkout_list) > 0:
@@ -104,7 +111,7 @@ class Supermarket:
 
             for idx, cust in enumerate(self.cust_list):
                 if curr_cust.customer_id == cust.customer_id:
-                  self.cust_list.pop(idx)
+                    self.cust_list.pop(idx)
 
     def checkout_list_update(self, curr_cust):
 

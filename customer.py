@@ -28,14 +28,12 @@ class Customer:
         self.y = -300
 
         # start localisation based in initial probabilities
-        self.current_location = np.random.choice(
+        self.location_current = np.random.choice(
                                         a=INIT_PROB['location'].values,
                                         p=INIT_PROB['initial_probability'])
 
-        # location steps
         self.location_history = list()
-        self.next_steps = []
-        self.target_location = str()
+        self.location_target = str()
 
         # random color per customer, to allow identification
         self.color = (np.random.randint(0, 255),
@@ -44,7 +42,7 @@ class Customer:
 
     def __repr__(self):
 
-        return f'{self.customer_id}'
+        return f'Customer no: {self.customer_id}'
 
     def transition(self):
         """
@@ -52,12 +50,13 @@ class Customer:
         updates target location accoring to markov chain prediction
         """
 
-        self.location_history.append(self.current_location)
-        if len(self.target_location) > 0:
-            self.current_location = self.target_location
+        self.location_history.append(self.location_current)
+
+        if len(self.location_target) > 0:
+            self.location_current = self.location_target
 
         # gets index of current location
-        target_index = TRANS_PROB.index.get_loc(self.current_location)
+        target_index = TRANS_PROB.index.get_loc(self.location_current)
 
         # create curr state vector with index = 1
         curr_state = np.zeros([1, 5])
@@ -68,7 +67,7 @@ class Customer:
         # markov chain dotproduct and selection of new location
         curr_trans_prob = curr_state.dot(prob_matrix)[0]
 
-        self.target_location = np.random.choice(a=TRANS_PROB.columns.values,
+        self.location_target = np.random.choice(a=TRANS_PROB.columns.values,
                                                 p=curr_trans_prob)
 
     def update_location(self, updated_x, updated_y):

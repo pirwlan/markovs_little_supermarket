@@ -1,4 +1,5 @@
 import cv2
+import datetime
 import gif
 import io
 import logging
@@ -7,6 +8,7 @@ import numpy as np
 import os
 import pandas as pd
 import seaborn as sns
+
 sns.set(style="whitegrid")
 logger = logging.getLogger(__file__.split('/')[-1][:-3])
 
@@ -52,7 +54,6 @@ def read_customer_per_minute():
                               index_col=0)
 
     return df_cust_min
-
 
 
 def make_dist_gif(dist_dict):
@@ -109,12 +110,13 @@ def get_img_from_fig(fig):
     return img
 
 
-def get_current_dist(curr_dist_dict):
+def get_current_dist(curr_dist_dict, step):
     """
     Creates figure object of current customer distribution
 
     Args:
         curr_dist_dict: dict - current distribution of customers
+        step: int - time in minutes
 
     Returns:
         dist_img: np.array - figure as array
@@ -125,33 +127,35 @@ def get_current_dist(curr_dist_dict):
     plt.clf()
 
     fig = plt.figure(figsize=(7, 4))
-    ax = sns.barplot(x=df_dist.index, y=df_dist.values)
+    ax = sns.barplot(x=df_dist.index, y=df_dist.values.astype(int))
 
     ax.set_xlabel("location")
     ax.set_ylabel("num of current customer")
 
     ax.legend()
-    ax.set_title("current customer distribution")
+    time_in_seconds = step * 60
+    ax.set_title(f'Time: {str(datetime.timedelta(seconds=time_in_seconds))}')
 
     curr_fig = get_img_from_fig(fig)
 
     return curr_fig
 
 
-def draw_distribution(frame, curr_dist_dict):
+def draw_distribution(frame, curr_dist_dict, step):
     """
     draw distribution on canvas frame
 
     Args:
         frame: np.array - canvas
         curr_dist_dict: dict - current distribution
+        step: int - time in minutes
 
     Returns:
         frame_copy: np.Array - new canvas to show
 
     """
     frame_copy = frame.copy()
-    curr_dist_fig = get_current_dist(curr_dist_dict)
+    curr_dist_fig = get_current_dist(curr_dist_dict, step)
 
     graph_height = curr_dist_fig.shape[0]
     graph_width = curr_dist_fig.shape[1]

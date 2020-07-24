@@ -18,7 +18,7 @@ class Supermarket:
 
     def __init__(self, num_checkout):
 
-        self.num_checkout = num_checkout
+        self.checkout_num = num_checkout
 
         # cust_list are customers currently in the supermarket
         self.cust_list = list()
@@ -30,7 +30,7 @@ class Supermarket:
         self.checkout_list = list()
 
         # distribution dicts
-        self.cust_dist = {
+        self.dist_cust = {
             'checkout': list(),
             'dairy': list(),
             'fruit': list(),
@@ -38,7 +38,7 @@ class Supermarket:
             'spices': list()
         }
 
-        self.curr_dist_dict = {
+        self.dist_curr = {
             'checkout': 0,
             'dairy': 0,
             'fruit': 0,
@@ -68,7 +68,7 @@ class Supermarket:
 
     def __repr__(self):
         output_str = f'At time step {self.step}, there are {len(self.cust_list)} in the supermarket. \n Of those are: \n'
-        for location, count in self.cust_dist.items():
+        for location, count in self.dist_cust.items():
             output_str += f'{count[-1]} in the {location} section. \n'
 
         return output_str
@@ -97,19 +97,17 @@ class Supermarket:
             frame: np.Array - canvas
         """
 
-
         self.step += 1
 
         for cust in self.cust_list:
-
             # do transition for customer
             cust.transition()
-            self.update_cust_location(curr_cust=cust)
+            self.update_cust_location(cust_curr=cust)
 
             # draw customers on image
             self.draw(cust, frame)
 
-            self.checkout_list_update(curr_cust=cust)
+            self.checkout_list_update(cust_curr=cust)
 
         # see who is new in chekout and pop one
         self.update_checkout()
@@ -144,7 +142,7 @@ class Supermarket:
         to history per location
         """
 
-        self.curr_dist_dict = {
+        self.dist_curr = {
             'checkout': 0,
             'dairy': 0,
             'fruit': 0,
@@ -153,10 +151,10 @@ class Supermarket:
         }
 
         for cust in self.cust_list:
-            self.curr_dist_dict[cust.current_location] += 1
+            self.dist_curr[cust.location_current] += 1
 
-        for location, curr_count in self.curr_dist_dict.items():
-            self.cust_dist[location].append(curr_count)
+        for location, curr_count in self.dist_curr.items():
+            self.dist_cust[location].append(curr_count)
 
     def update_checkout(self):
         """
@@ -164,47 +162,48 @@ class Supermarket:
         and deletes him from customer list.
         """
 
-        for person in range(self.num_checkout):
+        for person in range(self.checkout_num):
             if len(self.checkout_list) > 0:
 
-                curr_cust = self.checkout_list.pop(0)
+                cust_curr = self.checkout_list.pop(0)
 
                 for idx, cust in enumerate(self.cust_list):
-                    if curr_cust.customer_id == cust.customer_id:
+                    if cust_curr.customer_id == cust.customer_id:
                         self.cust_list.pop(idx)
 
-    def checkout_list_update(self, curr_cust):
+    def checkout_list_update(self, cust_curr):
         """
         adds new customer to checkout_list
         Args:
-            curr_cust: Customer - customer instance
+            cust_curr: Customer - customer instance
         """
 
-        if len(curr_cust.location_history) > 1:
-            if curr_cust.location_history[-1] == 'checkout' and curr_cust.location_history[-2] != 'checkout':
-                self.checkout_list.append(curr_cust)
+        if len(cust_curr.location_history) > 1:
+            if cust_curr.location_history[-1] == 'checkout' \
+                    and cust_curr.location_history[-2] != 'checkout':
+                self.checkout_list.append(cust_curr)
 
-    def update_cust_location(self, curr_cust):
+    def update_cust_location(self, cust_curr):
         """
         Update location of customer dependent on new location.
         If checkout state has not changed for two turns, do not
         change location
 
         Args:
-            curr_cust: Customer - Customer instance
+            cust_curr: Customer - Customer instance
         """
 
-        if curr_cust.current_location == 'checkout' \
-                            and curr_cust.target_location == 'checkout':
+        if cust_curr.location_current == 'checkout' \
+                and cust_curr.location_target == 'checkout':
             return True
 
-        if curr_cust.target_location:
-            curr_cust.current_location = curr_cust.target_location
+        if cust_curr.location_target:
+            cust_curr.location_current = cust_curr.location_target
 
-        updated_x = np.random.randint(*self.location_dict[curr_cust.current_location][0])
-        updated_y = np.random.randint(*self.location_dict[curr_cust.current_location][1])
+        updated_x = np.random.randint(*self.location_dict[cust_curr.location_current][0])
+        updated_y = np.random.randint(*self.location_dict[cust_curr.location_current][1])
 
-        curr_cust.update_location(updated_x=updated_x, updated_y=updated_y)
+        cust_curr.update_location(updated_x=updated_x, updated_y=updated_y)
 
     def calc_turnover(self):
         """
@@ -212,7 +211,7 @@ class Supermarket:
         based on how much people are in each location.
         """
 
-        for location, cust_no in self.curr_dist_dict.items():
+        for location, cust_no in self.dist_curr.items():
             self.turnover += self.location_turnover[location] * cust_no
 
         self.turnover_history.append(self.turnover)
@@ -224,6 +223,7 @@ class Supermarket:
         distribution of data
         """
         current_quarter = math.floor(self.step / 15)
+
         cust_per_min = int(np.random.normal(CUST_PER_MIN['mean_normalized'].iloc[current_quarter],
                                             CUST_PER_MIN['mean_normalized'].iloc[current_quarter]))
 

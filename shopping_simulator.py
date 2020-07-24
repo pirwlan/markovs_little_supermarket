@@ -14,7 +14,7 @@ def shopping_simulator():
     start = False
     tp.calculate_tp()
 
-    supermarche = Supermarket(num_checkout=1)
+    supermarche = Supermarket(num_checkout=int(os.getenv('NUMBER_OF_CHECKOUTS')))
     canvas = np.zeros([780, 1752, 3], dtype='uint8')
 
     while supermarche.step < 1000:
@@ -25,7 +25,7 @@ def shopping_simulator():
 
             supermarche.update_step(frame)
 
-            frame = utils.draw_distribution(frame, supermarche.curr_dist_dict)
+            frame = utils.draw_distribution(frame, supermarche.dist_curr, supermarche.step)
             frame = utils.draw_turnover(frame, supermarche.turnover_history)
 
         cv2.imshow('frame', frame)
@@ -36,11 +36,8 @@ def shopping_simulator():
         elif cv2.waitKey(1) & 0xFF == ord('w'):
             start = True
 
-        elif cv2.waitKey(1) & 0xFF == ord('s'):
-            start = False
-
     cv2.destroyAllWindows()
-    utils.make_dist_gif(supermarche.cust_dist)
+    utils.make_dist_gif(supermarche.dist_cust)
 
 
 if __name__ == '__main__':

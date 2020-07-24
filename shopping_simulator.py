@@ -15,6 +15,7 @@ def shopping_simulator():
     tp.calculate_tp()
 
     supermarche = Supermarket(num_checkout=int(os.getenv('NUMBER_OF_CHECKOUTS')))
+
     canvas = np.zeros([780, 1752, 3], dtype='uint8')
 
     while supermarche.step < 1000:

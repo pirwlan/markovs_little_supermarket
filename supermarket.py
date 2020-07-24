@@ -225,7 +225,7 @@ class Supermarket:
         current_quarter = math.floor(self.step / 15)
 
         cust_per_min = int(np.random.normal(CUST_PER_MIN['mean_normalized'].iloc[current_quarter],
-                                            CUST_PER_MIN['mean_normalized'].iloc[current_quarter]))
+                                            CUST_PER_MIN['std_normalized'].iloc[current_quarter]))
 
         if cust_per_min > 0:
             self.add_customer(num_of_customer=cust_per_min)

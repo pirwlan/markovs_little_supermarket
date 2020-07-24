@@ -1,12 +1,24 @@
+from customer import Customer
+
+import math
 import numpy as np
+import utils
+
+CUST_PER_MIN = utils.read_customer_per_minute()
 
 
 class Supermarket:
     """
     The supermarket class
+
+    Args:
+        num_checkout: int - number of checkout people
+
     """
 
-    def __init__(self):
+    def __init__(self, num_checkout):
+
+        self.num_checkout = num_checkout
 
         # cust_list are customers currently in the supermarket
         self.cust_list = list()
@@ -61,19 +73,22 @@ class Supermarket:
 
         return output_str
 
-    def add_customer(self, customer):
+    def add_customer(self, num_of_customer):
         """
         allows for addition of customer, and initiliases there location
         by initial x,y location
 
-        customer: list - list of Customer instances
+        number_of_customer: int - number of Customers to create
 
         """
-        self.cust_list.append(customer)
-        self.cust_list_all.append(customer)
 
-        for curr_cust in self.cust_list:
+        for num_cust in range(num_of_customer):
+            curr_cust_id = len(self.cust_list_all)
+            curr_cust = Customer(customer_id=curr_cust_id)
+
             self.update_cust_location(curr_cust)
+            self.cust_list.append(curr_cust)
+            self.cust_list_all.append(curr_cust)
 
     def update_step(self, frame):
         """
@@ -82,9 +97,11 @@ class Supermarket:
             frame: np.Array - canvas
         """
 
+
         self.step += 1
 
         for cust in self.cust_list:
+
             # do transition for customer
             cust.transition()
             self.update_cust_location(curr_cust=cust)
@@ -102,6 +119,9 @@ class Supermarket:
 
         # calculate turnover
         self.calc_turnover()
+
+        # spawn new customer
+        self.spawn_customer()
 
     def draw(self, curr_cust, frame):
         """
@@ -143,13 +163,15 @@ class Supermarket:
         Deletes one customer who is in location checkout
         and deletes him from customer list.
         """
-        if len(self.checkout_list) > 0:
 
-            curr_cust = self.checkout_list.pop(0)
+        for person in range(self.num_checkout):
+            if len(self.checkout_list) > 0:
 
-            for idx, cust in enumerate(self.cust_list):
-                if curr_cust.customer_id == cust.customer_id:
-                    self.cust_list.pop(idx)
+                curr_cust = self.checkout_list.pop(0)
+
+                for idx, cust in enumerate(self.cust_list):
+                    if curr_cust.customer_id == cust.customer_id:
+                        self.cust_list.pop(idx)
 
     def checkout_list_update(self, curr_cust):
         """
@@ -176,7 +198,7 @@ class Supermarket:
                             and curr_cust.target_location == 'checkout':
             return True
 
-        if self.step > 0:
+        if curr_cust.target_location:
             curr_cust.current_location = curr_cust.target_location
 
         updated_x = np.random.randint(*self.location_dict[curr_cust.current_location][0])
@@ -194,3 +216,16 @@ class Supermarket:
             self.turnover += self.location_turnover[location] * cust_no
 
         self.turnover_history.append(self.turnover)
+
+    def spawn_customer(self):
+        """
+        Checks how many steps (minutes) have passed, and
+        calculates number of customers to spawn based on
+        distribution of data
+        """
+        current_quarter = math.floor(self.step / 15)
+        cust_per_min = int(np.random.normal(CUST_PER_MIN['mean_normalized'].iloc[current_quarter],
+                                            CUST_PER_MIN['mean_normalized'].iloc[current_quarter]))
+
+        if cust_per_min > 0:
+            self.add_customer(num_of_customer=cust_per_min)

@@ -41,6 +41,20 @@ def read_transition_probabilities():
     return df_trans
 
 
+def read_customer_per_minute():
+    """
+    reads customer_per_minute
+
+    Returns:
+        df_cust_min: pd.DataFrame
+    """
+    df_cust_min = pd.read_csv(os.getenv('CUST_PER_MIN_PATH'),
+                              index_col=0)
+
+    return df_cust_min
+
+
+
 def make_dist_gif(dist_dict):
     """
     makes a gif image of the customer distribution

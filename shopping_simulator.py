@@ -1,4 +1,3 @@
-from customer import Customer
 from dotenv import load_dotenv
 from supermarket import Supermarket
 
@@ -15,10 +14,8 @@ def shopping_simulator():
     start = False
     tp.calculate_tp()
 
-    supermarche = Supermarket()
+    supermarche = Supermarket(num_checkout=1)
     canvas = np.zeros([780, 1752, 3], dtype='uint8')
-    for cust_id in range(1000):
-        supermarche.add_customer(customer=Customer(customer_id=cust_id))
 
     while supermarche.step < 1000:
         frame = canvas.copy()
@@ -61,13 +58,5 @@ if __name__ == '__main__':
     logger.info(f'Programm has started...')
 
     shopping_simulator()
-
-    curr_dist_dict={
-        'checkout': 0,
-        'dairy': 0,
-        'fruit': 0,
-        'drinks': 0,
-        'spices': 0
-    }
 
     logger.info(f'Programm has finished...')

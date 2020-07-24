@@ -126,7 +126,7 @@ def add_missing_time_stamps(df):
         df: pd.DataFrame - with missing values
 
     """
-
+    df = df.sort_values(['customer_no', 'timestamp'])
     for idx, customer in enumerate(df['customer_no'].unique()):
         df_curr_cust = df[df['customer_no'] == customer]
 
@@ -193,18 +193,60 @@ def get_initial_probability(df):
     df_initial_prob.to_csv(os.getenv('INIT_PROB_PATH'))
 
 
+def get_cust_per_quarter(df):
+    """
+    Calculates overview of average customer per minuter
+    on a 15 minute resolution
+    Args:
+        df:
+    """
+    df['timestamp'] = df.index
+    df = get_customer_index(df)
+    df_first = df[df['customer_index'] == 1]
+
+    df_mon_ = df_first[df_first.index.day == 2]['customer_index'].resample('900s').sum()
+    df_tue_ = df_first[df_first.index.day == 3]['customer_index'].resample('900s').sum()
+    df_wed_ = df_first[df_first.index.day == 4]['customer_index'].resample('900s').sum()
+    df_thu_ = df_first[df_first.index.day == 5]['customer_index'].resample('900s').sum()
+    df_fri_ = df_first[df_first.index.day == 6]['customer_index'].resample('900s').sum()
+
+    day_dict = {'monday': df_mon_.values,
+                'tuesday': df_tue_.values,
+                'wednesday': df_wed_.values,
+                'thursday': df_thu_.values,
+                'friday': df_fri_.values}
+
+    df_days = pd.DataFrame.from_dict(day_dict)
+    df_days['mean'] = df_days.mean(axis=1)
+    df_days['std'] = df_days[['monday', 'tuesday', 'wednesday', 'thursday', 'friday']].std(axis=1)
+
+    df_days['mean_normalized'] = df_days['mean'] / 15
+    df_days['std_normalized'] = df_days['std'] / 15
+
+    df = df_days[['mean_normalized', 'std_normalized']]
+    df.to_csv(os.getenv('CUST_PER_MIN_PATH'))
+
+
 def calculate_tp():
     """
     Main landing of get_transtional_probabilities.py
     """
     logger = logging.getLogger(__file__.split('/')[-1][:-3])
 
-    if os.path.exists(os.getenv('INIT_PROB_PATH')) and os.path.exists(os.getenv('TRANS_PROB_PATH')):
-        logger.info(f'Initial location probabilities and transition probabilities have already been calculated...')
+    if os.path.exists(os.getenv('INIT_PROB_PATH')) and \
+            os.path.exists(os.getenv('TRANS_PROB_PATH')) and \
+            os.path.exists(os.getenv('CUST_PER_MIN_PATH')):
+        logger.info(f'''Initial location probabilities, transition probabilities and 
+                        customers per quarter have already been calculated...''')
         return True
 
     df_data = read_data()
     df_data = add_missing_time_stamps(df_data)
+
+    if not os.path.exists(os.getenv('CUST_PER_MIN_PATH')):
+        get_cust_per_quarter(df_data)
+        logger.info(f'cust_per_quarer.csv has been calculated and saved...')
+
     df_data = add_shift_and_checkout(df_data)
 
     if not os.path.exists(os.getenv('INIT_PROB_PATH')):
@@ -216,7 +258,6 @@ def calculate_tp():
         trans_prob_unnormalized = sum_transitions(df_data)
         normalize_and_save_tp(trans_prob_unnormalized)
         logger.info(f'Transition probabilities has been calculated and saved...')
-
 
 
 

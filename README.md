@@ -18,7 +18,7 @@ In this project, I simulated daily life in a supermarket and the transition of c
 
   
 
-To do so, I used Markov Chain, a stochastic model used for simulate a sequence of events, based on the current state of the system. In this example, the customer's transition between the individual aisles are the transition between states.  
+To do so, I used Markov Chains, a stochastic model used for simulate a sequence of events, based on the current state of the system. In this example, the customer's transition between the individual aisles are the transition between states.  
 
 
 

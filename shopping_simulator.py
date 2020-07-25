@@ -38,7 +38,6 @@ def shopping_simulator():
             start = True
 
     cv2.destroyAllWindows()
-    utils.make_dist_gif(supermarche.dist_cust)
 
 
 if __name__ == '__main__':

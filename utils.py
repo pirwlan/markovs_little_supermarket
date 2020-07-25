@@ -133,7 +133,7 @@ def get_current_dist(curr_dist_dict, step):
     ax.set_ylabel("num of current customer")
 
     ax.legend()
-    time_in_seconds = step * 60
+    time_in_seconds = (step * 60) + (7 * 60 * 60)
     ax.set_title(f'Time: {str(datetime.timedelta(seconds=time_in_seconds))}')
 
     curr_fig = get_img_from_fig(fig)
@@ -212,11 +212,11 @@ def get_current_turnover(turnover_history):
     fig = plt.figure(figsize=(7, 3.9))
     ax = sns.lineplot(x_axis, turnover_history)
 
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Turnover")
+    ax.set_xlabel("Time [min]")
+    ax.set_ylabel("Turnover [s]")
 
     ax.legend()
-    ax.set_title("Turnover")
+    ax.set_title("Total turnover")
 
     curr_fig = get_img_from_fig(fig)
 

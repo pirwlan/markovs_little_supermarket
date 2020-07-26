@@ -18,7 +18,7 @@ def shopping_simulator():
 
     canvas = np.zeros([780, 1752, 3], dtype='uint8')
 
-    while supermarche.step < 1000:
+    while supermarche.step < 900:
         frame = canvas.copy()
         frame[0:int(os.getenv('SUPERMARKET_IMG_HEIGHT')), 0:int(os.getenv('SUPERMARKET_IMG_WIDTH'))] = supermarket_img
 
